@@ -1,0 +1,24 @@
+noteserver/                     # Root folder (project name)
+│
+├─ src/
+│  ├─ main/
+│  │  ├─ java/
+│  │  │  └─ com/andyzhou/noteserver/
+│  │  │     ├─ NoteserverApplication.java      # Main Spring Boot entry point
+│  │  │     ├─ model/
+│  │  │     │  └─ Note.java                     # Note entity
+│  │  │     ├─ repository/
+│  │  │     │  └─ NoteRepository.java          # Spring Data JPA repository
+│  │  │     └─ controller/
+│  │  │        └─ NoteController.java          # REST API endpoints
+│  │  │
+│  │  └─ resources/
+│  │     ├─ application.properties             # Database config + Spring settings
+│  │     └─ static/                            # Optional: static files (if needed)
+│  │
+│  └─ test/
+│     └─ java/com/andyzhou/noteserver/         # Unit/integration tests
+│        └─ NoteControllerTests.java
+│
+├─ pom.xml                                     # Maven project file
+└─ README.md                                   # Project overview
