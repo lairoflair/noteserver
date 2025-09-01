@@ -4,17 +4,24 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 @Entity
 @Table(name = "notes")
 public class Note {
     
     @Id
-    @GeneratedValue
     private UUID id;
     private String title;
     private String content;
     // private LocalDateTime created_at;
+    @Column(name = "updated_at")
+    @JsonProperty("updatedAt")
     private LocalDateTime updated_at;
+
+    // @Version
+    // @Column(nullable = false)
+    // private int version = 0;
 
     // Getters and setters
     public UUID getId() {
@@ -54,5 +61,13 @@ public class Note {
     public void setUpdatedAt(LocalDateTime updated_at) { 
         this.updated_at = updated_at; 
     }
+
+    // public int getVersion() { 
+    //     return version; 
+    // }
+
+    // public void setVersion(int version) { 
+    //     this.version = version; 
+    // }
 }
 

@@ -3,8 +3,17 @@ package com.andyzhou.noteserver.controller;
 import com.andyzhou.noteserver.dto.SyncRequest;
 import com.andyzhou.noteserver.model.Note;
 import com.andyzhou.noteserver.repository.NoteRepository;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+
+import org.springframework.transaction.annotation.Transactional;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -22,33 +31,51 @@ public class NoteController {
     // ✅ Existing endpoints can stay here
 
     // Add the syncNotes method here
+    
     @PostMapping("/sync")
-    public List<Note> syncNotes(@RequestBody SyncRequest request) {
-        final LocalDateTime effectiveLastSync = request.getLastSync() == null ? LocalDateTime.MIN : request.getLastSync();
+    @Transactional
+    public SyncRequest syncNotes(@RequestBody SyncRequest request) {
+        List<Note> updatedNotes = new ArrayList<>();
+        
+        // Note newNote = new Note();
+        // newNote.setId(java.util.UUID.randomUUID());
+        // newNote.setTitle("New Note");
+        // newNote.setContent("This is a new note.");
+        // newNote.setUpdatedAt(LocalDateTime.now());
+        // repository.save(newNote);
+        // updatedNotes.add(newNote);
 
-        // 1. Merge client notes into the DB
-        if (request.getNotes() != null) {
-            for (Note clientNote : request.getNotes()) {
-                Optional<Note> existing = repository.findById(clientNote.getId());
-                if (existing.isPresent()) {
-                    Note dbNote = existing.get();
-                    // Update DB note only if client version is newer
-                    if (clientNote.getUpdatedAt().isAfter(dbNote.getUpdatedAt())) {
-                        dbNote.setTitle(clientNote.getTitle());
-                        dbNote.setContent(clientNote.getContent());
-                        dbNote.setUpdatedAt(clientNote.getUpdatedAt());
-                        repository.save(dbNote);
-                    }
-                } else {
-                    // New note from client → save it
-                    repository.save(clientNote);
-                }
+
+        for (Note clientNote : request.getNotes()) {
+            try {
+                Note syncedNote = saveNoteSafely(clientNote);
+                updatedNotes.add(syncedNote);
+            } catch (Exception e) {
+                System.err.println("Failed to sync note " + clientNote.getId() + ": " + e.getMessage());
             }
         }
-
-        // 2. Return all notes updated since last sync
-        return repository.findAll().stream()
-                .filter(note -> note.getUpdatedAt().isAfter(effectiveLastSync))
-                .collect(Collectors.toList());
+        System.out.println("Updated notes: " + updatedNotes);
+        SyncRequest response = new SyncRequest();
+        response.setNotes(updatedNotes);
+        response.setLastSync(LocalDateTime.now());
+        response.setDeletedNotes(null);
+        return response;
     }
+
+    @PersistenceContext
+    private EntityManager em;
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public Note saveNoteSafely(Note note) {
+        Note existing = repository.findById(note.getId()).orElse(null);
+        if (existing != null) {
+            existing.setTitle(note.getTitle());
+            existing.setContent(note.getContent());
+            existing.setUpdatedAt(note.getUpdatedAt());
+            return em.merge(existing);
+        } else {
+            return em.merge(note);
+        }
+    }
+
 }
