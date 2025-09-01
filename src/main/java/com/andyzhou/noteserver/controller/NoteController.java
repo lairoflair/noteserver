@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
@@ -36,16 +37,10 @@ public class NoteController {
     @Transactional
     public SyncRequest syncNotes(@RequestBody SyncRequest request) {
         List<Note> updatedNotes = new ArrayList<>();
-        
-        // Note newNote = new Note();
-        // newNote.setId(java.util.UUID.randomUUID());
-        // newNote.setTitle("New Note");
-        // newNote.setContent("This is a new note.");
-        // newNote.setUpdatedAt(LocalDateTime.now());
-        // repository.save(newNote);
-        // updatedNotes.add(newNote);
-
-
+        for (UUID deletedId : request.getDeletedNotes()) {
+            System.out.println("Deleting note with ID: " + deletedId);
+            deleteNoteById(deletedId);
+        }
         for (Note clientNote : request.getNotes()) {
             try {
                 Note syncedNote = saveNoteSafely(clientNote);
@@ -69,13 +64,18 @@ public class NoteController {
     public Note saveNoteSafely(Note note) {
         Note existing = repository.findById(note.getId()).orElse(null);
         if (existing != null) {
+            System.out.println("Updating note with ID: " + note.getId());
             existing.setTitle(note.getTitle());
             existing.setContent(note.getContent());
             existing.setUpdatedAt(note.getUpdatedAt());
             return em.merge(existing);
         } else {
+            System.out.println("Creating new note with ID: " + note.getId());
             return em.merge(note);
         }
     }
 
+    public void deleteNoteById(UUID id) {
+        repository.deleteById(id);
+    }
 }
