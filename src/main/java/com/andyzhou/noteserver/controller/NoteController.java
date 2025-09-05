@@ -78,4 +78,18 @@ public class NoteController {
     public void deleteNoteById(UUID id) {
         repository.deleteById(id);
     }
+
+    @PostMapping("/recover")
+    @Transactional
+    public List<Note> recoverNotes(@RequestBody List<Note> notes) {
+        List<UUID> noteIds = notes.stream().map(Note::getId).collect(Collectors.toList());
+        List<Note> recovered = new ArrayList<>();
+        for (Note note : repository.findAll()) {
+            if (!noteIds.contains(note.getId())) {
+                recovered.add(note);
+            }
+        }
+        System.out.println("Recovered notes: " + recovered);
+        return recovered;
+    }
 }

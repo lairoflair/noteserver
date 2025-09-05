@@ -15,10 +15,10 @@ public class Note {
     private String title;
     private String content;
     // private LocalDateTime created_at;
+    // private LocalDateTime lastSync;
     @Column(name = "updated_at")
     @JsonProperty("updatedAt")
     private LocalDateTime updated_at;
-
     // @Version
     // @Column(nullable = false)
     // private int version = 0;
@@ -62,6 +62,12 @@ public class Note {
         this.updated_at = updated_at; 
     }
 
+    // public LocalDateTime getLastSync() {
+    //     return lastSync;
+    // }
+    // public void setLastSync(LocalDateTime lastSync) {
+    //     this.lastSync = lastSync;
+    // }
     // public int getVersion() { 
     //     return version; 
     // }
